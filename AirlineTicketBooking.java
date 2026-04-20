@@ -2,6 +2,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Date;
 
 public class AirlineTicketBooking extends JFrame {
     private CardLayout cardLayout;
@@ -9,13 +10,14 @@ public class AirlineTicketBooking extends JFrame {
     private List<Passenger> passengers;
     private Passenger currentPassenger;
 
-    // Form fields (so we can reset them)
-    private JTextField nameField, ageField, dobField, genderField, flightNameField,
-            fromField, toField, dateField, numberOfPassengersField;
+    // Form fields
+    private JTextField nameField, ageField, flightNameField, numberOfPassengersField;
+    private JComboBox<String> genderComboBox, fromFieldCombo, toFieldCombo;
+    private JSpinner dobSpinner, travelDateSpinner;
 
     public AirlineTicketBooking() {
         setTitle("Airline Ticket Booking");
-        setSize(500, 400);
+        setSize(600, 450);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
@@ -36,14 +38,14 @@ public class AirlineTicketBooking extends JFrame {
     private void addPage1() {
         JPanel page1 = new JPanel();
         JLabel companyNameLabel = new JLabel("FlyMe Company", SwingConstants.CENTER);
-        companyNameLabel.setFont(new Font("Arial", Font.BOLD, 20));
+        companyNameLabel.setFont(new Font("Arial", Font.BOLD, 22));
 
         JButton adminButton = new JButton("Admin");
         JButton passengerButton = new JButton("Passenger");
 
         adminButton.addActionListener(e -> showAdminDetails());
         passengerButton.addActionListener(e -> {
-            clearForm(); // ensure blank form for new passenger
+            clearForm();
             cardLayout.show(cardPanel, "Page2");
         });
 
@@ -61,25 +63,69 @@ public class AirlineTicketBooking extends JFrame {
 
         nameField = new JTextField(25);
         ageField = new JTextField(10);
-        dobField = new JTextField(15);
-        genderField = new JTextField(10);
+
+        // Date of Birth calendar
+        dobSpinner = new JSpinner(new SpinnerDateModel());
+        JSpinner.DateEditor dobEditor = new JSpinner.DateEditor(dobSpinner, "yyyy-MM-dd");
+        dobSpinner.setEditor(dobEditor);
+
+        // Gender dropdown
+        genderComboBox = new JComboBox<>(new String[]{"Female", "Male", "Other"});
+
         flightNameField = new JTextField(20);
-        fromField = new JTextField(15);
-        toField = new JTextField(15);
-        dateField = new JTextField(15);
+
+        // Indian cities dropdowns
+        String[] indianCities = {
+            "Delhi", "Mumbai", "Bengaluru", "Hyderabad", "Chennai",
+            "Kolkata", "Pune", "Ahmedabad", "Jaipur", "Goa",
+            "Lucknow", "Coimbatore", "Visakhapatnam", "Nagpur", "Patna"
+        };
+        fromFieldCombo = new JComboBox<>(indianCities);
+        toFieldCombo = new JComboBox<>(indianCities);
+
+        // Travel Date calendar
+        travelDateSpinner = new JSpinner(new SpinnerDateModel());
+        JSpinner.DateEditor travelDateEditor = new JSpinner.DateEditor(travelDateSpinner, "yyyy-MM-dd");
+        travelDateSpinner.setEditor(travelDateEditor);
+
         numberOfPassengersField = new JTextField(10);
 
         JButton nextButton = new JButton("Next");
         JButton cancelButton = new JButton("Cancel");
 
         nextButton.addActionListener(e -> {
-            int numberOfPassengers = Integer.parseInt(numberOfPassengersField.getText());
-            currentPassenger = new Passenger(
-                    nameField.getText(), ageField.getText(), dobField.getText(), genderField.getText(),
-                    flightNameField.getText(), fromField.getText(), toField.getText(), dateField.getText(),
-                    numberOfPassengers
-            );
-            cardLayout.show(cardPanel, "Page3");
+            try {
+                int enteredAge = Integer.parseInt(ageField.getText());
+                Date dobDate = (Date) dobSpinner.getValue();
+                int calculatedAge = calculateAge(dobDate);
+
+                if (enteredAge != calculatedAge) {
+                    JOptionPane.showMessageDialog(this,
+                            "Age does not match Date of Birth. Please correct it.",
+                            "Validation Error",
+                            JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                int numberOfPassengers = Integer.parseInt(numberOfPassengersField.getText());
+                currentPassenger = new Passenger(
+                        nameField.getText(),
+                        String.valueOf(enteredAge),
+                        dobEditor.getFormat().format(dobDate),
+                        (String) genderComboBox.getSelectedItem(),
+                        flightNameField.getText(),
+                        (String) fromFieldCombo.getSelectedItem(),
+                        (String) toFieldCombo.getSelectedItem(),
+                        travelDateEditor.getFormat().format((Date) travelDateSpinner.getValue()),
+                        numberOfPassengers
+                );
+                cardLayout.show(cardPanel, "Page3");
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this,
+                        "Please enter valid numbers for Age and Passengers.",
+                        "Input Error",
+                        JOptionPane.ERROR_MESSAGE);
+            }
         });
 
         cancelButton.addActionListener(e -> {
@@ -88,15 +134,15 @@ public class AirlineTicketBooking extends JFrame {
             cardLayout.show(cardPanel, "Page1");
         });
 
-        page2.setLayout(new GridLayout(10, 2));
+        page2.setLayout(new GridLayout(11, 2));
         page2.add(new JLabel("Name:")); page2.add(nameField);
         page2.add(new JLabel("Age:")); page2.add(ageField);
-        page2.add(new JLabel("Date of Birth:")); page2.add(dobField);
-        page2.add(new JLabel("Gender:")); page2.add(genderField);
+        page2.add(new JLabel("Date of Birth:")); page2.add(dobSpinner);
+        page2.add(new JLabel("Gender:")); page2.add(genderComboBox);
         page2.add(new JLabel("Flight Name:")); page2.add(flightNameField);
-        page2.add(new JLabel("From:")); page2.add(fromField);
-        page2.add(new JLabel("To:")); page2.add(toField);
-        page2.add(new JLabel("Date:")); page2.add(dateField);
+        page2.add(new JLabel("From:")); page2.add(fromFieldCombo);
+        page2.add(new JLabel("To:")); page2.add(toFieldCombo);
+        page2.add(new JLabel("Travel Date:")); page2.add(travelDateSpinner);
         page2.add(new JLabel("Number of Passengers:")); page2.add(numberOfPassengersField);
         page2.add(nextButton); page2.add(cancelButton);
 
@@ -106,9 +152,9 @@ public class AirlineTicketBooking extends JFrame {
     private void addPage3() {
         JPanel page3 = new JPanel();
         ButtonGroup seatGroup = new ButtonGroup();
-        JRadioButton businessClass = new JRadioButton("Business Class -> $500");
-        JRadioButton economicClass = new JRadioButton("Economic Class -> $300");
-        JRadioButton generalClass = new JRadioButton("General Class -> $150");
+        JRadioButton businessClass = new JRadioButton("Business Class -> ₹500");
+        JRadioButton economicClass = new JRadioButton("Economic Class -> ₹300");
+        JRadioButton generalClass = new JRadioButton("General Class -> ₹150");
 
         JButton continueButton = new JButton("Continue");
         JButton cancelButton = new JButton("Cancel");
@@ -159,7 +205,7 @@ public class AirlineTicketBooking extends JFrame {
         JButton cancelButton = new JButton("Cancel");
 
         confirmButton.addActionListener(e -> {
-            passengers.add(currentPassenger); // store for admin
+            passengers.add(currentPassenger);
             cardLayout.show(cardPanel, "Page5");
         });
 
@@ -196,7 +242,7 @@ public class AirlineTicketBooking extends JFrame {
         JButton logoutButton = new JButton("Log Out");
 
         logoutButton.addActionListener(e -> {
-            currentPassenger = null; // clear passenger for privacy
+            currentPassenger = null;
             clearForm();
             cardLayout.show(cardPanel, "Page1");
         });
@@ -207,24 +253,43 @@ public class AirlineTicketBooking extends JFrame {
         cardPanel.add(page5, "Page5");
     }
 
-    private void showAdminDetails() {
+        private void showAdminDetails() {
         StringBuilder adminDetails = new StringBuilder("Passenger details:\n");
-        for (Passenger passenger : passengers) {
-            adminDetails.append(passenger.toString()).append("\n\n");
+        if (passengers.isEmpty()) {
+            adminDetails.append("No bookings yet.");
+        } else {
+            for (Passenger passenger : passengers) {
+                adminDetails.append(passenger.toString()).append("\n\n");
+            }
         }
-        JOptionPane.showMessageDialog(this, adminDetails.toString(), "Admin Details", JOptionPane.INFORMATION_MESSAGE);
+        JOptionPane.showMessageDialog(this, adminDetails.toString(),
+                "Admin Details", JOptionPane.INFORMATION_MESSAGE);
     }
 
     private void clearForm() {
         if (nameField != null) nameField.setText("");
         if (ageField != null) ageField.setText("");
-        if (dobField != null) dobField.setText("");
-        if (genderField != null) genderField.setText("");
+        if (dobSpinner != null) dobSpinner.setValue(new Date());
+        if (genderComboBox != null) genderComboBox.setSelectedIndex(0);
         if (flightNameField != null) flightNameField.setText("");
-        if (fromField != null) fromField.setText("");
-        if (toField != null) toField.setText("");
-        if (dateField != null) dateField.setText("");
+        if (fromFieldCombo != null) fromFieldCombo.setSelectedIndex(0);
+        if (toFieldCombo != null) toFieldCombo.setSelectedIndex(0);
+        if (travelDateSpinner != null) travelDateSpinner.setValue(new Date());
         if (numberOfPassengersField != null) numberOfPassengersField.setText("");
+    }
+
+    private int calculateAge(Date dob) {
+        java.util.Calendar dobCal = java.util.Calendar.getInstance();
+        dobCal.setTime(dob);
+
+        java.util.Calendar today = java.util.Calendar.getInstance();
+
+        int age = today.get(java.util.Calendar.YEAR) - dobCal.get(java.util.Calendar.YEAR);
+
+        if (today.get(java.util.Calendar.DAY_OF_YEAR) < dobCal.get(java.util.Calendar.DAY_OF_YEAR)) {
+            age--;
+        }
+        return age;
     }
 
     private class Passenger {
@@ -250,11 +315,17 @@ public class AirlineTicketBooking extends JFrame {
 
         @Override
         public String toString() {
-            return "Name: " + name + "\nAge: " + age + ", DOB: " + dob + ", Gender: " + gender +
-                    "\nFlight Name: " + flightName + ", From: " + from +
-                    ", To: " + to + ", Date: " + date +
+            return "Name: " + name +
+                    "\nAge: " + age +
+                    "\nDOB: " + dob +
+                    "\nGender: " + gender +
+                    "\nFlight Name: " + flightName +
+                    "\nFrom: " + from +
+                    "\nTo: " + to +
+                    "\nTravel Date: " + date +
                     "\nPassengers: " + numberOfPassengers +
-                    ", Seat Type: " + seatType + ", Cost: $" + cost;
+                    "\nSeat Type: " + seatType +
+                    "\nCost: ₹" + cost;
         }
     }
 
@@ -262,4 +333,3 @@ public class AirlineTicketBooking extends JFrame {
         SwingUtilities.invokeLater(AirlineTicketBooking::new);
     }
 }
-
