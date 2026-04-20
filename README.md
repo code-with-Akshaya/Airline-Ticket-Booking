@@ -35,7 +35,7 @@ The application also includes an **Admin view** to display all passenger booking
   - Scrollable booking details
 
 ---
- 🛠️ Technologies Used
+ ##🛠️ Technologies Used
 - **Java** (JDK 8+)
 - **Swing** for GUI components
 - **CardLayout** for multi-page navigation
