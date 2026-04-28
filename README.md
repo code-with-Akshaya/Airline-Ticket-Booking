@@ -42,8 +42,3 @@ The application also includes an **Admin view** to display all passenger booking
 - **JSpinner** for calendar date selection
 - **JComboBox** for dropdown menus
 
-
-## 🚀 How to Run
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/your-username/airline-ticket-booking.git
